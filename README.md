@@ -1,7 +1,7 @@
-# PoABOT - Power of Algorithm
+# PoA_HERMES
 
 ## 트레이딩뷰에서 전달되는 웹훅을 처리하는 봇입니다.
-
+## 유튜버 장도강님의 POA 봇을 필요에 맞게 수정하였습니다.
 &nbsp;
 
 - 지원 거래소
