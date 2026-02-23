@@ -125,9 +125,10 @@ class Bitget:
         return result
 
     def set_leverage(self, leverage, symbol):
-        
         hold_side = "long" if self.order_info.is_buy else "short"
-        return self.client.set_leverage(leverage, symbol, params= { "holdSide": hold_side })
+        # Bitget API v2 requires marginCoin parameter
+        quote = self.order_info.quote if self.order_info else "USDT"
+        return self.client.set_leverage(leverage, symbol, params={"holdSide": hold_side, "marginCoin": quote})
 
     def market_order(self, order_info: MarketOrder):
         from exchange.pexchange import retry
