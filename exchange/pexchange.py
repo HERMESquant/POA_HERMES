@@ -279,11 +279,12 @@ def retry(
 
                             if order_info.is_entry:
                                 if order_info.is_futures:
-                                    if order_info.is_buy:
-                                        trade_side = "Open" 
-                                    else:
-                                        trade_side = "open"
-                                    new_params = { "tradeSide": trade_side, "marginMode": margin_mode}
+                                    # Bitget API uses lowercase "open" for tradeSide
+                                    trade_side = "open"
+                                    new_params = {"tradeSide": trade_side, "marginMode": margin_mode}
+                                else:
+                                    # Spot trading doesn't need tradeSide
+                                    new_params = {"marginMode": margin_mode}
                             elif order_info.is_close:
                                 if order_info.side == "sell":
                                     final_side = "buy"

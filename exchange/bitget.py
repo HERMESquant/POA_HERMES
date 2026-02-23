@@ -177,11 +177,11 @@ class Bitget:
             params = { "oneWayMode": True }
         elif self.position_mode == "hedge":
             if order_info.is_futures:
-                if order_info.is_buy:
-                    trade_side = "Open" 
-                else:
-                    trade_side = "open"
+                # Bitget API uses lowercase "open" for tradeSide
+                trade_side = "open"
                 params = { "tradeSide": trade_side }
+            else:
+                params = {}
                 
         params |= { "marginMode": order_info.margin_mode or "isolated" }
         if order_info.margin_mode is not None:
