@@ -14,8 +14,19 @@ class Binance:
             }
         )
         self.client.load_markets()
-        self.position_mode = "one-way"
+        self.position_mode = self._get_position_mode()
         self.order_info: MarketOrder = None
+
+    def _get_position_mode(self):
+        """Fetch position mode from exchange settings"""
+        try:
+            response = self.client.fapiPrivate_get_positionside_dual()
+            if response.get("dualSidePosition"):
+                return "hedge"
+            else:
+                return "one-way"
+        except Exception:
+            return "one-way"
 
     def init_info(self, order_info: MarketOrder):
         self.order_info = order_info

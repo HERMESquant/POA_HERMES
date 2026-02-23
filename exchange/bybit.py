@@ -17,7 +17,24 @@ class Bybit:
         )
         self.client.load_markets()
         self.order_info: MarketOrder = None
-        self.position_mode = "one-way"
+        self.position_mode = self._get_position_mode()
+
+    def _get_position_mode(self):
+        """Fetch position mode from exchange settings"""
+        try:
+            response = self.client.private_get_v5_account_info()
+            unified_margin = response.get("result", {}).get("unifiedMarginStatus", 0)
+            if unified_margin >= 3:
+                pos_response = self.client.private_get_v5_position_list({
+                    "category": "linear", "settleCoin": "USDT", "limit": 1
+                })
+                positions = pos_response.get("result", {}).get("list", [])
+                for pos in positions:
+                    if pos.get("positionIdx") in [1, 2]:
+                        return "hedge"
+            return "one-way"
+        except Exception:
+            return "one-way"
 
     def load_time_difference(self):
         self.client.load_time_difference()

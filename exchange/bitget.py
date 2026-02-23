@@ -17,7 +17,20 @@ class Bitget:
         )
         self.client.load_markets()
         self.order_info: MarketOrder = None
-        self.position_mode = "one-way"
+        self.position_mode = self._get_position_mode()
+
+    def _get_position_mode(self):
+        """Fetch position mode from exchange settings"""
+        try:
+            # Bitget: holdMode can be "double_hold" (hedge) or "single_hold" (one-way)
+            response = self.client.privateMixGetV2MixAccountAccount({"productType": "USDT-FUTURES"})
+            hold_mode = response.get("data", {}).get("holdMode", "single_hold")
+            if hold_mode == "double_hold":
+                return "hedge"
+            else:
+                return "one-way"
+        except Exception:
+            return "one-way"
 
     def init_info(self, order_info: MarketOrder):
         self.order_info = order_info

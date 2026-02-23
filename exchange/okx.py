@@ -18,7 +18,20 @@ class Okx:
         )
         self.client.load_markets()
         self.order_info: MarketOrder = None
-        self.position_mode = "one-way"
+        self.position_mode = self._get_position_mode()
+
+    def _get_position_mode(self):
+        """Fetch position mode from exchange settings"""
+        try:
+            # OKX: posMode can be "long_short_mode" (hedge) or "net_mode" (one-way)
+            response = self.client.private_get_account_config()
+            pos_mode = response.get("data", [{}])[0].get("posMode", "net_mode")
+            if pos_mode == "long_short_mode":
+                return "hedge"
+            else:
+                return "one-way"
+        except Exception:
+            return "one-way"
 
     def init_info(self, order_info: MarketOrder):
         self.order_info = order_info
