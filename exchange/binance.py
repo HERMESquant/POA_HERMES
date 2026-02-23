@@ -234,19 +234,15 @@ class Binance:
         entry_amount = self.get_amount(order_info)
         if entry_amount == 0:
             raise error.MinAmountError()
+        params = {}  # Default initialization
         if self.position_mode == "one-way":
             params = {}
         elif self.position_mode == "hedge":
+            # For entry, buy=LONG, sell=SHORT
             if order_info.side == "buy":
-                if order_info.is_entry:
-                    positionSide = "LONG"
-                elif order_info.is_close:
-                    positionSide = "SHORT"
-            elif order_info.side == "sell":
-                if order_info.is_entry:
-                    positionSide = "SHORT"
-                elif order_info.is_close:
-                    positionSide = "LONG"
+                positionSide = "LONG"
+            else:
+                positionSide = "SHORT"
             params = {"positionSide": positionSide}
         if order_info.leverage is not None:
             self.set_leverage(order_info.leverage, symbol)
@@ -331,19 +327,16 @@ class Binance:
 
         symbol = self.order_info.unified_symbol  # self.parse_symbol(base, quote)
         close_amount = self.get_amount(order_info)
+
+        params = {"reduceOnly": True}  # Default initialization
         if self.position_mode == "one-way":
             params = {"reduceOnly": True}
         elif self.position_mode == "hedge":
+            # For close, buy closes SHORT, sell closes LONG
             if order_info.side == "buy":
-                if order_info.is_entry:
-                    positionSide = "LONG"
-                elif order_info.is_close:
-                    positionSide = "SHORT"
-            elif order_info.side == "sell":
-                if order_info.is_entry:
-                    positionSide = "SHORT"
-                elif order_info.is_close:
-                    positionSide = "LONG"
+                positionSide = "SHORT"
+            else:
+                positionSide = "LONG"
             params = {"positionSide": positionSide}
 
         try:

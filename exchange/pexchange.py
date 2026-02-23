@@ -175,9 +175,10 @@ def retry(
                         attempts = max_attempts
                 elif order_info.exchange in ("BYBIT"):
                     if "position idx not match position mode" in str(e):
+                        position_idx = 0  # Default value to prevent NameError
+                        params = {}  # Default value
                         if instance.position_mode == "one-way":
                             instance.position_mode = "hedge"
-                            position_idx = None
                             if order_info.side == "buy":
                                 if order_info.is_entry:
                                     position_idx = 1
@@ -218,9 +219,11 @@ def retry(
                     if "posSide error" in str(e):
                         params = {}
 
+                        pos_side = "net"  # Default for one-way
+                        params = {}  # Default value
                         if instance.position_mode == "one-way":
                             instance.position_mode = "hedge"
-                            pos_side = "net"
+                            # For hedge mode, determine pos_side based on order direction
                             if order_info.is_futures and order_info.side == "buy":
                                 if order_info.is_entry:
                                     pos_side = "long"
@@ -241,10 +244,13 @@ def retry(
                                 params |= {"posSide": pos_side, "tdMode": "cross"}
                         elif instance.position_mode == "hedge":
                             instance.position_mode = "one-way"
+                            td_mode = order_info.margin_mode or "isolated"
                             if order_info.is_entry:
-                                params |= {}
+                                params = {"tdMode": td_mode, "posSide": "net"}
                             elif order_info.is_close:
-                                params |= {"reduceOnly": True}
+                                params = {"reduceOnly": True, "tdMode": td_mode, "posSide": "net"}
+                            else:
+                                params = {"tdMode": td_mode, "posSide": "net"}
 
                         if order_info.is_entry:
                             if order_info.leverage is None:
@@ -304,14 +310,11 @@ def retry(
 
 
                     elif "two-way positions" in str(e):
+                        new_params = {}  # Default value
                         if instance.position_mode == "hedge":
                             instance.position_mode = "one-way"
-                            new_side = order_info.side + "_single"
-                            new_params = {"reduceOnly": True, "side": new_side}
-                            args = tuple(
-                                new_side if i == 2 else arg
-                                for i, arg in enumerate(args)
-                            )
+                            # Don't modify side - CCXT doesn't support "buy_single"
+                            new_params = {"reduceOnly": True, "oneWayMode": True}
                             args = tuple(
                                 new_params if i == 5 else arg
                                 for i, arg in enumerate(args)
@@ -322,6 +325,10 @@ def retry(
                                 new_params = {}
                             elif order_info.is_close:
                                 new_params = {"reduceOnly": True}
+                            args = tuple(
+                                new_params if i == 5 else arg
+                                for i, arg in enumerate(args)
+                            )
                             args = tuple(
                                 new_params if i == 5 else arg
                                 for i, arg in enumerate(args)

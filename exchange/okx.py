@@ -223,7 +223,9 @@ class Okx:
 
     def set_leverage(self, leverage, symbol):
         if self.order_info.is_futures:
-            if self.order_info.is_futures and self.order_info.is_entry:
+            # Determine pos_side based on position mode and order direction
+            pos_side = "net"  # Default for one-way mode
+            if self.position_mode == "hedge":
                 if self.order_info.is_buy:
                     pos_side = "long"
                 elif self.order_info.is_sell:
@@ -279,18 +281,16 @@ class Okx:
             params |= {"tdMode": order_info.margin_mode}
 
         if self.position_mode == "one-way":
-            params |= {}
+            params |= {"posSide": "net"}
         elif self.position_mode == "hedge":
-            if order_info.is_futures and order_info.side == "buy":
-                if order_info.is_entry:
+            # For entry: buy=long, sell=short
+            if order_info.is_futures:
+                if order_info.side == "buy":
                     pos_side = "long"
-                elif order_info.is_close:
+                else:
                     pos_side = "short"
-            elif order_info.is_futures and order_info.side == "sell":
-                if order_info.is_entry:
-                    pos_side = "short"
-                elif order_info.is_close:
-                    pos_side = "long"
+            else:
+                pos_side = "net"
             params |= {"posSide": pos_side}
 
         try:
